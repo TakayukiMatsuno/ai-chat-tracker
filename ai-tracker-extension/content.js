@@ -1,19 +1,22 @@
+// ==========================================
+// 1. チャット計測機能 (ChatGPT / Gemini用)
+// ==========================================
 const CONFIG = {
   chatgpt: {
     sendButtonSelector: '[data-testid="send-button"]',
     textareaSelector: '#prompt-textarea'
   },
   gemini: {
-    sendButtonSelector: 'button[aria-label*="送信"], button[aria-label*="Send"], button .fa-paper-plane',
+    sendButtonSelector: 'button[aria-label*="送信"], button[aria-label*="Send"], button .fa-paper-plane, button[data-test-id="send-button"]',
     textareaSelector: 'div[contenteditable="true"]' 
   }
 };
 
-let userId = null;
-// 連打防止用の変数を追加
+// 連打防止用の変数
 let lastSentTime = 0;
+let userId = null;
 
-// ユーザーIDの取得
+// ユーザーIDの取得または生成
 chrome.storage.local.get(['userId'], (result) => {
   if (result.userId) {
     userId = result.userId;
@@ -23,10 +26,12 @@ chrome.storage.local.get(['userId'], (result) => {
   }
 });
 
+// どのサイトにいるか判定
 const currentHost = window.location.hostname;
 const serviceName = currentHost.includes('chatgpt') ? 'chatgpt' : 
                     currentHost.includes('gemini') ? 'gemini' : null;
 
+// ChatGPTかGeminiなら計測を開始
 if (serviceName) {
   setupTracking(serviceName);
 }
@@ -35,6 +40,7 @@ function setupTracking(service) {
   const config = CONFIG[service];
   console.log(`AI Tracker Ready on: ${service}`);
 
+  // クリック監視
   document.addEventListener('click', (event) => {
     const button = event.target.closest(config.sendButtonSelector);
     if (button && !button.disabled) {
@@ -42,6 +48,7 @@ function setupTracking(service) {
     }
   }, true);
 
+  // Enterキー監視
   document.addEventListener('keydown', (event) => {
     if (event.key === 'Enter' && !event.shiftKey) {
       const textarea = event.target.closest(config.textareaSelector);
@@ -55,14 +62,11 @@ function setupTracking(service) {
 function sendMessageToBackground(service, method) {
   if (!userId) return;
 
-  // 【ここが修正ポイント】クールダウン処理
-  // 前回の送信から1秒(1000ミリ秒)経過していない場合は無視する
+  // 連打防止（1秒以内の重複は無視）
   const now = Date.now();
   if (now - lastSentTime < 1000) {
-    console.log("⏳ Skipped double count (Cooldown)");
     return;
   }
-  // 送信時刻を更新
   lastSentTime = now;
 
   const data = {
@@ -72,19 +76,21 @@ function sendMessageToBackground(service, method) {
 
   try {
     chrome.runtime.sendMessage({ action: "logChat", data: data });
-    console.log("📨 Message sent to background script");
   } catch (e) {
-    console.log("Extension context invalidated. Please reload the page.");
+    // 拡張機能が更新された直後などのエラー対策
+    console.log("Context invalidated.");
   }
 }
-// （これまでのコードはそのまま、一番下に追記）
+
 
 // ==========================================
-// 自動接続機能（Webアプリからの連携）
+// 2. 自動接続機能 (Webダッシュボード用)
 // ==========================================
+// localhost または vercel.app で開いている時に実行
 if (window.location.hostname.includes('localhost') || window.location.hostname.includes('vercel.app')) {
   console.log("🔌 AI Tracker: Waiting for token from dashboard...");
   
+  // Webページから 'AI_TRACKER_TOKEN' というイベントが来るのを待つ
   window.addEventListener('AI_TRACKER_TOKEN', (event) => {
     const token = event.detail;
     if (token) {

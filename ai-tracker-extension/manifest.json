@@ -10,7 +10,8 @@
       "matches": [
         "https://chatgpt.com/*",
         "https://gemini.google.com/*",
-        "http://localhost:3000/*"  
+        "http://localhost:3000/*",
+        "https://ai-chat-tracker-2a92.vercel.app/*"
       ],
       "js": ["content.js"]
     }
