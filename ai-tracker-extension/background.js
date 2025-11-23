@@ -2,7 +2,7 @@
 // 設定エリア (あなたのSupabaseの情報を入れてください)
 // ==========================================
 const SUPABASE_URL = "https://hukompscjkwggxjlqaxd.supabase.co";
-const SUPABASE_KEY = "sb_publishable_mB6X_fXlL_P2aK7EVo0vfQ_cwHri1Z-";
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh1a29tcHNjamt3Z2d4amxxYXhkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM4NzEwMzksImV4cCI6MjA3OTQ0NzAzOX0.RnuI1r64LnFXI6La7D2WSui3T6buFdryNo5ZU2eWChQ";
 // ==========================================
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
