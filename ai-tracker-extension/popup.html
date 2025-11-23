@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <style>
+    body {
+      width: 300px;
+      padding: 15px;
+      font-family: "Helvetica Neue", Arial, "Hiragino Kaku Gothic ProN", "Hiragino Sans", Meiryo, sans-serif;
+    }
+    h3 { margin-top: 0; }
+    p { font-size: 12px; color: #666; }
+    input {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 8px;
+      margin-bottom: 10px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+    button {
+      width: 100%;
+      padding: 10px;
+      background: #3b82f6;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    button:hover { background: #2563eb; }
+    #status { margin-top: 10px; font-size: 12px; min-height: 20px; }
+  </style>
+</head>
+<body>
+  <h3>設定</h3>
+  <p>
+    Webサイトの「接続設定」にあるトークンをコピーして貼り付けてください。
+  </p>
+  
+  <input type="text" id="tokenInput" placeholder="eyJhbGci..." />
+  
+  <button id="saveBtn">保存して接続</button>
+  
+  <div id="status"></div>
+  
+  <script src="popup.js"></script>
+</body>
+</html>

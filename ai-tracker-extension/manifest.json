@@ -1,0 +1,18 @@
+{
+  "manifest_version": 3,
+  "name": "AI Chat Tracker Final",
+  "version": "3.0",
+  "permissions": ["storage"],
+  "action": { "default_popup": "popup.html" },
+  "background": { "service_worker": "background.js" },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://chatgpt.com/*",
+        "https://gemini.google.com/*",
+        "http://localhost:3000/*"  
+      ],
+      "js": ["content.js"]
+    }
+  ]
+}
