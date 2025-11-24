@@ -2,7 +2,7 @@
 import { useEffect, useState, useMemo } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Legend } from 'recharts';
-import { Twitter, LogOut, ChevronDown, ChevronUp, Zap, Copy, Calendar, Settings, X, BarChart3 } from 'lucide-react';
+import { Twitter, LogOut, ChevronDown, ChevronUp, Zap, Copy, Calendar, Settings, X, BarChart3, CheckCircle, ArrowRight } from 'lucide-react';
 
 const COLORS = {
   chatgpt: '#10A37F', 
@@ -192,39 +192,136 @@ export default function Home() {
   };
 
   if (!session) {
-      return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-50 font-sans p-4">
-          <div className="bg-white p-8 rounded-2xl shadow-xl max-w-sm w-full border border-gray-100 text-center animate-in fade-in zoom-in-95 duration-300">
-            {/* アプリアイコン */}
-            <div className="flex justify-center mb-6">
-              <div className="p-4 bg-blue-50 rounded-full shadow-inner">
-                <BarChart3 className="w-10 h-10 text-blue-600" />
+    return (
+      <div className="min-h-screen bg-white font-sans text-gray-800">
+        {/* ヘッダー */}
+        <header className="border-b py-4 sticky top-0 bg-white/80 backdrop-blur-md z-10">
+          <div className="max-w-6xl mx-auto px-4 flex justify-between items-center">
+            <div className="flex items-center gap-2 font-bold text-xl text-gray-900">
+              <div className="p-2 bg-blue-100 rounded-lg text-blue-600">
+                <BarChart3 size={24} />
+              </div>
+              AI Chat Tracker
+            </div>
+            <button 
+              onClick={handleGoogleLogin}
+              className="text-sm font-bold text-gray-600 hover:text-gray-900 px-4 py-2"
+            >
+              ログイン
+            </button>
+          </div>
+        </header>
+
+        {/* ヒーローセクション */}
+        <section className="max-w-6xl mx-auto px-4 py-16 md:py-24 flex flex-col md:flex-row items-center gap-12">
+          <div className="flex-1 space-y-8">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-green-100 text-green-700 text-xs font-bold">
+              <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+              Chrome拡張機能 公開申請中
+            </div>
+            <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight leading-tight text-gray-900">
+              あなたのAI学習を、<br/>
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-teal-500">
+                自動で可視化する。
+              </span>
+            </h1>
+            <p className="text-lg text-gray-600 leading-relaxed">
+              ChatGPTとGeminiの利用回数を自動でトラッキング。<br className="hidden md:block"/>
+              日々の積み重ねをグラフにして、モチベーションを維持しましょう。
+            </p>
+            
+            <div className="space-y-4 mt-8">
+              <div className="flex items-center gap-2 text-sm font-bold text-gray-500">
+                <span className="bg-gray-100 text-gray-600 px-2 py-0.5 rounded text-xs border border-gray-200">手順</span>
+                利用開始には 2つのステップ が必要です
+              </div>
+
+              <div className="flex flex-col md:flex-row gap-3 md:items-center">
+                
+                {/* STEP 1: 拡張機能 */}
+                <div className="flex flex-col gap-1 w-full md:w-auto">
+                  <span className="text-xs font-bold text-blue-600 ml-1">STEP 1</span>
+                  <a 
+                    href="#" // ★ここにChromeウェブストアのURLを入れる
+                    className="flex items-center justify-center gap-2 bg-gray-900 text-white px-6 py-4 rounded-xl font-bold text-sm md:text-base shadow-lg hover:bg-gray-800 transition-all hover:-translate-y-1"
+                  >
+                    拡張機能を入れる <ArrowRight size={18} />
+                  </a>
+                </div>
+
+                {/* 矢印 (PCのみ表示) */}
+                <div className="hidden md:flex text-gray-300 pt-5">
+                  <ArrowRight size={24} />
+                </div>
+
+                {/* STEP 2: Googleログイン */}
+                <div className="flex flex-col gap-1 w-full md:w-auto">
+                  <span className="text-xs font-bold text-blue-600 ml-1">STEP 2</span>
+                  <button 
+                    onClick={handleGoogleLogin} 
+                    className="flex items-center justify-center gap-3 bg-white text-gray-700 border border-gray-300 px-6 py-4 rounded-xl font-bold text-sm md:text-base shadow-sm hover:bg-gray-50 hover:shadow-md hover:border-gray-400 transition-all hover:-translate-y-1 group"
+                  >
+                    <GoogleLogo />
+                    <span className="group-hover:text-gray-900">Googleでログインする</span>
+                  </button>
+                </div>
+
               </div>
             </div>
-            
-            {/* タイトルとサブテキスト */}
-            <h1 className="text-2xl font-bold text-gray-800 mb-3 tracking-tight">AI Chat Tracker</h1>
-            <p className="text-gray-500 text-sm mb-8 leading-relaxed">
-              日々のAI活用を自動で記録。<br />
-              あなたの成長を可視化しましょう。
-            </p>
-
-            {/* Googleログインボタン (Google公式スタイル風) */}
-            <button 
-              onClick={handleGoogleLogin} 
-              className="w-full bg-white text-gray-700 border border-gray-300 px-4 py-3 rounded-lg font-bold hover:bg-gray-50 hover:border-gray-400 hover:shadow-md transition-all flex items-center justify-center gap-3 group"
-            >
-              <GoogleLogo />
-              <span className="group-hover:text-gray-900">Googleでログイン</span>
-            </button>
-            
-            <p className="mt-6 text-xs text-gray-400">
-              ログインすることで利用規約と<br/>プライバシーポリシーに同意したものとみなされます。
-            </p>
+            <p className="text-xs text-gray-400">※ 完全無料 / 個人情報は保存しません</p>
           </div>
-        </div>
-      );
-    }
+
+          {/* 画面イメージ（プレースホルダー） */}
+          <div className="flex-1 w-full">
+            <div className="relative rounded-2xl shadow-2xl border border-gray-200 overflow-hidden bg-gray-50 aspect-[4/3] group">
+              {/* ★画像を配置したら、以下のコメントアウトを外してimgタグを有効にしてください */}
+              {<img src="/images/dashboard-preview.png" alt="Dashboard Preview" className="object-cover w-full h-full" /> }
+            </div>
+          </div>
+        </section>
+
+        {/* 機能紹介セクション */}
+        <section className="bg-gray-50 py-20 border-t border-gray-100">
+          <div className="max-w-6xl mx-auto px-4">
+            <div className="text-center mb-16">
+              <h2 className="text-3xl font-bold text-gray-900 mb-4">なぜログを取るのか？</h2>
+              <p className="text-gray-500">AIとの対話は、これからの時代の新しいスキルです。</p>
+            </div>
+
+            <div className="grid md:grid-cols-3 gap-8">
+              <FeatureCard 
+                icon={<Zap className="w-8 h-8 text-yellow-500" />}
+                title="自動でカウント"
+                desc="意識する必要はありません。拡張機能がバックグラウンドでChatGPTとGeminiの送信を検知します。"
+              />
+              <FeatureCard 
+                icon={<BarChart3 className="w-8 h-8 text-blue-500" />}
+                title="成長が見える"
+                desc="日次、週次、月次のグラフで利用推移を確認。学習の習慣化を強力にサポートします。"
+              />
+              <FeatureCard 
+                icon={<CheckCircle className="w-8 h-8 text-green-500" />}
+                title="マルチプラットフォーム"
+                desc="複数のAIサービスに対応。自分がどのAIをどれくらい使っているか、一目で比較できます。"
+              />
+            </div>
+          </div>
+        </section>
+
+        {/* フッター */}
+        <footer className="bg-white py-12 border-t">
+          <div className="max-w-6xl mx-auto px-4 flex flex-col md:flex-row justify-between items-center gap-4">
+            <p className="text-sm text-gray-500">&copy; 2025 AI Chat Tracker</p>
+            <div className="flex gap-6 text-sm">
+              <a href="/privacy" className="text-gray-500 hover:text-blue-600">プライバシーポリシー</a>
+              <a href="#" className="text-gray-500 hover:text-blue-600">Chromeウェブストア</a>
+            </div>
+          </div>
+        </footer>
+      </div>
+    );
+  }
+  // ▲▲▲ 未ログイン時の表示（LP）ここまで ▲▲▲
 
   return (
     <div className="min-h-screen bg-gray-50 p-4 md:p-8 font-sans text-gray-800">
@@ -373,6 +470,16 @@ function StatCard({ title, count, color, textColor }: any) {
     >
       <p className="text-xs text-gray-400 font-bold uppercase tracking-wider">{title}</p>
       <p className="text-3xl font-bold mt-2 font-mono" style={{ color: numColor }}>{count}</p>
+    </div>
+  );
+}
+
+function FeatureCard({ icon, title, desc }: { icon: React.ReactNode, title: string, desc: string }) {
+  return (
+    <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+      <div className="mb-4 p-3 bg-gray-50 rounded-xl inline-block">{icon}</div>
+      <h3 className="text-xl font-bold text-gray-900 mb-3">{title}</h3>
+      <p className="text-gray-500 leading-relaxed text-sm">{desc}</p>
     </div>
   );
 }
