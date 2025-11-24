@@ -82,23 +82,30 @@ function sendMessageToBackground(service, method) {
   }
 }
 
-
 // ==========================================
 // 2. 自動接続機能 (Webダッシュボード用)
 // ==========================================
-// localhost または vercel.app で開いている時に実行
 if (window.location.hostname.includes('localhost') || window.location.hostname.includes('vercel.app')) {
   console.log("🔌 AI Tracker: Waiting for token from dashboard...");
   
-  // Webページから 'AI_TRACKER_TOKEN' というイベントが来るのを待つ
   window.addEventListener('AI_TRACKER_TOKEN', (event) => {
-    const token = event.detail;
-    if (token) {
-      console.log("🔌 Token received!", token);
-      // トークンをChromeストレージに保存
-      chrome.storage.local.set({ supabaseToken: token }, () => {
-        alert('✅ 拡張機能の接続設定が完了しました！\nChatGPTやGeminiを開いて利用を開始してください。');
-      });
+    try {
+      // JSONをパースして保存
+      const data = JSON.parse(event.detail);
+      
+      if (data.accessToken && data.refreshToken) {
+        console.log("🔌 Tokens received!");
+        
+        // アクセストークンとリフレッシュトークンの両方を保存
+        chrome.storage.local.set({ 
+          supabaseToken: data.accessToken,
+          supabaseRefreshToken: data.refreshToken
+        }, () => {
+          alert('✅ 接続設定が完了しました！');
+        });
+      }
+    } catch (e) {
+      console.error("Token parse error", e);
     }
   });
 }

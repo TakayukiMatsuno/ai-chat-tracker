@@ -7,37 +7,58 @@ const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === "logChat") {
-    sendToSupabase(request.data);
+    // 非同期処理をチェーンさせるため、ここでは待たずに実行開始
+    handleLogChat(request.data);
+    return true; 
   }
 });
 
-async function sendToSupabase(logData) {
-  // 1. Chromeに保存されたトークンを取り出す
-  const storage = await chrome.storage.local.get(['supabaseToken']);
-  const userToken = storage.supabaseToken;
+async function handleLogChat(logData) {
+  // 1. 保存されたトークンを取り出す
+  const storage = await chrome.storage.local.get(['supabaseToken', 'supabaseRefreshToken']);
+  let userToken = storage.supabaseToken;
+  let refreshToken = storage.supabaseRefreshToken;
 
   if (!userToken) {
-    console.error("❌ トークンがありません。拡張機能のアイコンから設定してください。");
+    console.error("❌ トークンがありません。設定してください。");
     return;
   }
 
-  // 2. トークンからユーザーIDを取り出す (JWTデコード)
+  // 2. ユーザーID取得 (トークンから)
   const userId = parseJwt(userToken).sub; 
 
-  // 3. 送信データを作成
+  // 3. データ送信を試みる
+  const success = await sendToSupabase(logData, userId, userToken);
+
+  // 4. もし失敗（期限切れ）したら、リフレッシュして再挑戦
+  if (!success && refreshToken) {
+    console.log("🔄 Token expired. Refreshing...");
+    
+    const newTokens = await refreshAccessToken(refreshToken);
+    if (newTokens) {
+      console.log("✅ Token refreshed! Retrying send...");
+      // 新しいトークンで再送信
+      await sendToSupabase(logData, userId, newTokens.accessToken);
+    } else {
+      console.error("❌ Refresh failed. Please login again via dashboard.");
+    }
+  }
+}
+
+// データ送信関数
+async function sendToSupabase(logData, userId, token) {
   const payload = {
     service: logData.service,
-    user_id: userId // 認証された正しいユーザーID
+    user_id: userId
   };
 
   try {
-    // 4. Supabaseへ送信 (Authorizationヘッダー付き)
     const response = await fetch(`${SUPABASE_URL}/rest/v1/chat_logs`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'apikey': SUPABASE_KEY,
-        'Authorization': `Bearer ${userToken}`, // ⬅️ ここが通行手形になります
+        'Authorization': `Bearer ${token}`,
         'Prefer': 'return=minimal'
       },
       body: JSON.stringify(payload)
@@ -45,24 +66,50 @@ async function sendToSupabase(logData) {
 
     if (response.ok) {
       console.log('✅ [Secure] Saved to Supabase successfully!');
+      return true;
     } else {
-      console.error('❌ Failed to save:', await response.text());
+      console.warn('⚠️ Send failed:', response.status);
+      return false;
     }
   } catch (error) {
     console.error('❌ Network error:', error);
+    return false;
   }
 }
 
-// JWT(トークン)の中身を解読してユーザーIDを取り出す関数
-function parseJwt (token) {
-    try {
-      var base64Url = token.split('.')[1];
-      var base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-      var jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
-          return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-      }).join(''));
-      return JSON.parse(jsonPayload);
-    } catch (e) {
-      return { sub: null };
+// トークン更新関数
+async function refreshAccessToken(refreshToken) {
+  try {
+    const response = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=refresh_token`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': SUPABASE_KEY,
+      },
+      body: JSON.stringify({ refresh_token: refreshToken })
+    });
+
+    const data = await response.json();
+    
+    if (response.ok && data.access_token) {
+      // 新しいトークンを保存
+      await chrome.storage.local.set({ 
+        supabaseToken: data.access_token,
+        supabaseRefreshToken: data.refresh_token
+      });
+      return { 
+        accessToken: data.access_token, 
+        refreshToken: data.refresh_token 
+      };
     }
+  } catch (e) {
+    console.error("Refresh error:", e);
+  }
+  return null;
+}
+
+function parseJwt(token) {
+    try {
+      return JSON.parse(decodeURIComponent(atob(token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')).split('').map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join('')));
+    } catch (e) { return { sub: null }; }
 };

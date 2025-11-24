@@ -17,8 +17,11 @@ const supabase = createClient(
 export default function Home() {
   const [session, setSession] = useState<any>(null);
   const [logs, setLogs] = useState<any[]>([]);
-  const [accessToken, setAccessToken] = useState('');
   
+  // トークン関連
+  const [accessToken, setAccessToken] = useState('');
+  const [refreshToken, setRefreshToken] = useState(''); // ★追加: リフレッシュトークン
+
   // ユーザー設定関連
   const [username, setUsername] = useState('');
   const [isProfileOpen, setIsProfileOpen] = useState(false);
@@ -30,18 +33,23 @@ export default function Home() {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
   useEffect(() => {
+    // 初回セッション取得
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       if (session) {
+        setAccessToken(session.access_token);
+        setRefreshToken(session.refresh_token); // ★追加
         fetchLogs();
         fetchProfile(session.user.id);
       }
     });
 
+    // ログイン状態の変化を監視
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
       if (session) {
         setAccessToken(session.access_token);
+        setRefreshToken(session.refresh_token); // ★追加
         fetchLogs();
         fetchProfile(session.user.id);
       }
@@ -71,7 +79,6 @@ export default function Home() {
     if (data) setLogs(data);
   };
 
-  // ★ プロフィール取得
   const fetchProfile = async (userId: string) => {
     const { data } = await supabase
       .from('profiles')
@@ -82,12 +89,10 @@ export default function Home() {
     if (data && data.username) {
       setUsername(data.username);
     } else {
-      // 未設定ならメールアドレスの@より前を初期値にする
       setUsername(session?.user?.email?.split('@')[0] || '');
     }
   };
 
-  // ★ プロフィール保存
   const updateProfile = async () => {
     if (!session) return;
     setIsSaving(true);
@@ -110,10 +115,16 @@ export default function Home() {
     }
   };
 
+  // ★ 修正: 自動接続機能
+  // アクセストークンとリフレッシュトークンをまとめてJSONで送る
   const connectExtension = () => {
-    const event = new CustomEvent('AI_TRACKER_TOKEN', { detail: accessToken });
+    const data = {
+      accessToken: accessToken,
+      refreshToken: refreshToken
+    };
+    const event = new CustomEvent('AI_TRACKER_TOKEN', { detail: JSON.stringify(data) });
     window.dispatchEvent(event);
-    alert('拡張機能にトークンを送信しました！\n拡張機能アイコンをクリックして接続を確認してください。');
+    alert('拡張機能に認証情報を送信しました！\n(自動更新用のトークンも含みます)');
   };
 
   const { filteredCounts, chartData } = useMemo(() => {
@@ -154,7 +165,6 @@ export default function Home() {
   }, [logs, dateRange, groupBy]);
 
   const shareOnX = () => {
-    // シェア文言にユーザー名を含める
     const text = `${username}さんのAI学習記録(${dateRange === 'all' ? '累計' : dateRange}): ChatGPT ${filteredCounts.chatgpt}回, Gemini ${filteredCounts.gemini}回 📊 #AIStack`;
     const url = "https://twitter.com/intent/tweet?text=" + encodeURIComponent(text);
     window.open(url, '_blank');
@@ -181,7 +191,6 @@ export default function Home() {
               <img src={session.user.user_metadata.avatar_url} alt="avatar" className="w-10 h-10 rounded-full border" />
             )}
             <div>
-              {/* ユーザー名を表示（なければ「ゲスト」） */}
               <h1 className="text-lg font-bold">{username || 'Guest'}</h1>
               <p className="text-xs text-gray-500">Log Dashboard</p>
             </div>
@@ -190,18 +199,15 @@ export default function Home() {
             <button onClick={shareOnX} className="bg-black text-white px-4 py-2 rounded-full text-sm font-bold hover:bg-gray-800 flex items-center gap-2 shadow-md transition-transform hover:scale-105">
               <Twitter size={16} /> シェア
             </button>
-            
-            {/* 設定ボタン */}
             <button onClick={() => setIsProfileOpen(true)} className="text-gray-400 hover:text-blue-500 transition-colors">
               <Settings size={20} />
             </button>
-            
             <button onClick={handleLogout} className="text-gray-400 hover:text-red-500 transition-colors">
               <LogOut size={20} />
             </button>
           </div>
 
-          {/* ★ プロフィール設定モーダル */}
+          {/* プロフィール設定モーダル */}
           {isProfileOpen && (
             <div className="absolute top-16 right-4 z-10 w-72 bg-white rounded-xl shadow-xl border border-gray-100 p-4 animate-in fade-in slide-in-from-top-2">
               <div className="flex justify-between items-center mb-3">
