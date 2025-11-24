@@ -2,7 +2,7 @@
 import { useEffect, useState, useMemo } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Legend } from 'recharts';
-import { Twitter, LogOut, ChevronDown, ChevronUp, Zap, Copy, Calendar, Settings, X, BarChart3, CheckCircle, ArrowRight } from 'lucide-react';
+import { Twitter, LogOut, ChevronDown, ChevronUp, Zap, Copy, Calendar, Settings, X, BarChart3, CheckCircle, ArrowRight, Trophy} from 'lucide-react';
 
 const COLORS = {
   chatgpt: '#10A37F', 
@@ -36,6 +36,22 @@ const GoogleLogo = () => (
 );
 
 export default function Home() {
+  // Homeコンポーネント内に追加
+  const [rankingData, setRankingData] = useState<any[]>([]);
+  const [rankingType, setRankingType] = useState<'total' | 'daily'>('daily');
+  useEffect(() => {
+    fetchRanking();
+  }, [rankingType]);
+
+  const fetchRanking = async () => {
+    // 作成したSQL関数(RPC)を呼び出す
+    const { data, error } = await supabase.rpc(
+      rankingType === 'total' ? 'get_total_ranking' : 'get_daily_ranking'
+    );
+    if (error) console.error(error);
+    else setRankingData(data || []);
+  };
+
   const [session, setSession] = useState<any>(null);
   const [logs, setLogs] = useState<any[]>([]);
   
@@ -438,6 +454,68 @@ export default function Home() {
                 </BarChart>
               </ResponsiveContainer>
             </div>
+          </div>
+        </div>
+        {/* ▼ ランキングセクション ▼ */}
+        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 mt-8">
+          <div className="flex justify-between items-center mb-6">
+            <h3 className="font-bold text-gray-700 flex items-center gap-2">
+              <Trophy className="text-yellow-500" /> ランキング
+            </h3>
+            <div className="flex bg-gray-100 p-1 rounded-lg text-xs">
+              <button 
+                onClick={() => setRankingType('daily')} 
+                className={`px-3 py-1 rounded-md transition-all ${rankingType === 'daily' ? 'bg-white font-bold shadow-sm text-gray-800' : 'text-gray-500'}`}
+              >
+                デイリー
+              </button>
+              <button 
+                onClick={() => setRankingType('total')} 
+                className={`px-3 py-1 rounded-md transition-all ${rankingType === 'total' ? 'bg-white font-bold shadow-sm text-gray-800' : 'text-gray-500'}`}
+              >
+                累計
+              </button>
+            </div>
+          </div>
+
+          <div className="space-y-3">
+            {rankingData.map((user, index) => (
+              <div key={index} className="flex items-center justify-between p-3 hover:bg-gray-50 rounded-lg transition-colors">
+                <div className="flex items-center gap-4">
+                  <div className={`
+                    w-8 h-8 flex items-center justify-center rounded-full font-bold text-sm
+                    ${index === 0 ? 'bg-yellow-100 text-yellow-700' : 
+                      index === 1 ? 'bg-gray-100 text-gray-700' : 
+                      index === 2 ? 'bg-orange-100 text-orange-700' : 'text-gray-500'}
+                  `}>
+                    {index + 1}
+                  </div>
+                  <div className="flex items-center gap-3">
+                    {user.avatar_url ? (
+                      <img src={user.avatar_url} alt={user.username} className="w-8 h-8 rounded-full border" />
+                    ) : (
+                      <div className="w-8 h-8 rounded-full bg-gray-200" />
+                    )}
+                    <span className="font-medium text-sm text-gray-700">
+                      {user.username}
+                      {/* 自分のランクにはマークをつけるなどの工夫も可能 */}
+                      {session?.user?.user_metadata?.full_name === user.username && 
+                        <span className="ml-2 text-[10px] bg-blue-100 text-blue-600 px-1.5 py-0.5 rounded">YOU</span>
+                      }
+                    </span>
+                  </div>
+                </div>
+                <div className="font-mono font-bold text-gray-900">
+                  {user.count} <span className="text-xs text-gray-400 font-normal">chats</span>
+                </div>
+              </div>
+            ))}
+            
+            {rankingData.length === 0 && (
+              <div className="text-center text-gray-400 text-sm py-8">
+                データがありません
+              </div>
+            )}
           </div>
         </div>
       </div>
