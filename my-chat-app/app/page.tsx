@@ -263,7 +263,7 @@ export default function Home() {
                 <div className="flex flex-col gap-1 w-full md:w-auto">
                   <span className="text-xs font-bold text-blue-600 ml-1">STEP 1</span>
                   <a 
-                    href="#" // ★ここにChromeウェブストアのURLを入れる
+                    href="https://chromewebstore.google.com/detail/doidkbcadhfgjlgadcgeciogckmncllo" // ★ここにChromeウェブストアのURLを入れる
                     className="flex items-center justify-center gap-2 bg-gray-900 text-white px-6 py-4 rounded-xl font-bold text-sm md:text-base shadow-lg hover:bg-gray-800 transition-all hover:-translate-y-1"
                   >
                     拡張機能を入れる <ArrowRight size={18} />
