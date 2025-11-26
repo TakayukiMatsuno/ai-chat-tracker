@@ -236,10 +236,6 @@ export default function Home() {
         {/* ヒーローセクション */}
         <section className="max-w-6xl mx-auto px-4 py-16 md:py-24 flex flex-col md:flex-row items-center gap-12">
           <div className="flex-1 space-y-8">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-green-100 text-green-700 text-xs font-bold">
-              <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
-              Chrome拡張機能 公開申請中
-            </div>
             <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight leading-tight text-gray-900">
               あなたのAI学習を、<br/>
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-teal-500">
