@@ -5,9 +5,9 @@ const SUPABASE_URL = "https://hukompscjkwggxjlqaxd.supabase.co";
 const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh1a29tcHNjamt3Z2d4amxxYXhkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM4NzEwMzksImV4cCI6MjA3OTQ0NzAzOX0.RnuI1r64LnFXI6La7D2WSui3T6buFdryNo5ZU2eWChQ";
 // ==========================================
 
+
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === "logChat") {
-    // 非同期処理をチェーンさせるため、ここでは待たずに実行開始
     handleLogChat(request.data);
     return true; 
   }
@@ -42,7 +42,7 @@ async function handleLogChat(logData) {
     } else {
       console.error("❌ Refresh failed. Please login again via dashboard.");
       
-      // ▼▼▼ 自動ログアウト処理（無効なトークンを削除） ▼▼▼
+      // ▼▼▼ 自動ログアウト処理 ▼▼▼
       await chrome.storage.local.remove(['supabaseToken', 'supabaseRefreshToken', 'userId']);
       console.log("👋 Auto logged out from extension.");
     }
@@ -96,7 +96,6 @@ async function refreshAccessToken(refreshToken) {
     const data = await response.json();
     
     if (response.ok && data.access_token) {
-      // 新しいトークンを保存
       await chrome.storage.local.set({ 
         supabaseToken: data.access_token,
         supabaseRefreshToken: data.refresh_token
