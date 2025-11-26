@@ -31,24 +31,22 @@ async function handleLogChat(logData) {
   const success = await sendToSupabase(logData, userId, userToken);
 
   // 4. もし失敗（期限切れ）したら、リフレッシュして再挑戦
-    if (!success && refreshToken) {
-      console.log("🔄 Token expired. Refreshing...");
+  if (!success && refreshToken) {
+    console.log("🔄 Token expired. Refreshing...");
+    
+    const newTokens = await refreshAccessToken(refreshToken);
+    if (newTokens) {
+      console.log("✅ Token refreshed! Retrying send...");
+      // 新しいトークンで再送信
+      await sendToSupabase(logData, userId, newTokens.accessToken);
+    } else {
+      console.error("❌ Refresh failed. Please login again via dashboard.");
       
-      const newTokens = await refreshAccessToken(refreshToken);
-      if (newTokens) {
-        console.log("✅ Token refreshed! Retrying send...");
-        // 新しいトークンで再送信
-        await sendToSupabase(logData, userId, newTokens.accessToken);
-      } else {
-        console.error("❌ Refresh failed. Please login again via dashboard.");
-        
-        // ▼▼▼ 追加: 自動ログアウト処理（無効なトークンを削除） ▼▼▼
-        await chrome.storage.local.remove(['supabaseToken', 'supabaseRefreshToken', 'userId']);
-        console.log("👋 Auto logged out from extension.");
-        // ▲▲▲ 追加ここまで ▲▲▲
-      }
+      // ▼▼▼ 自動ログアウト処理（無効なトークンを削除） ▼▼▼
+      await chrome.storage.local.remove(['supabaseToken', 'supabaseRefreshToken', 'userId']);
+      console.log("👋 Auto logged out from extension.");
     }
-}
+  }
 }
 
 // データ送信関数
