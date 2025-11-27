@@ -101,7 +101,7 @@ if (window.location.hostname.includes('localhost') || window.location.hostname.i
           supabaseToken: data.accessToken,
           supabaseRefreshToken: data.refreshToken
         }, () => {
-          alert('✅ 接続設定が完了しました！');
+          alert('✅ Connection setup complete! \n接続設定が完了しました！');
         });
       }
     } catch (e) {
